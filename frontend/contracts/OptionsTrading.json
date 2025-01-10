@@ -1,0 +1,257 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_optionId",
+				"type": "uint256"
+			}
+		],
+		"name": "buyOption",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_strikePrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_premium",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_expiry",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "_isCall",
+				"type": "bool"
+			}
+		],
+		"name": "createOption",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_optionId",
+				"type": "uint256"
+			}
+		],
+		"name": "exerciseOption",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_optionId",
+				"type": "uint256"
+			}
+		],
+		"name": "markExpired",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "optionId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			}
+		],
+		"name": "OptionBought",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "optionId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "strikePrice",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "premium",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "expiry",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "isCall",
+				"type": "bool"
+			}
+		],
+		"name": "OptionCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "optionId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			}
+		],
+		"name": "OptionExercised",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "optionId",
+				"type": "uint256"
+			}
+		],
+		"name": "OptionExpired",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "optionIdCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "options",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "strikePrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "premium",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "expiry",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isCall",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "exercised",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

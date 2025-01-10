@@ -14,14 +14,21 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { createOption } from '@/services/contractService'
+import { useToast } from '@/hooks/use-toast'
 
 const TradePage = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const [chart, setChart] = useState<IChartApi | null>(null)
   const [optionType, setOptionType] = useState<'call' | 'put'>('call')
-  const [amount, setAmount] = useState('')
+  const [tradeAction, setTradeAction] = useState<'buy' | 'sell'>('buy')
+  const [lots, setLots] = useState('')
   const [strikePrice, setStrikePrice] = useState('')
-  const [expiry, setExpiry] = useState('')
+  const [premium, setPremium] = useState('')
+  const [expiryDate, setExpiryDate] = useState('')
+  const [expiryTime, setExpiryTime] = useState('')
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (!chartContainerRef.current) return
@@ -68,13 +75,42 @@ const TradePage = () => {
   }, [])
 
   const handleTrade = async () => {
-    // Implement your trading logic here
-    console.log({
-      type: optionType,
-      amount,
-      strikePrice,
-      expiry
-    })
+    try {
+      setIsLoading(true)
+      const expiryDateTime = `${expiryDate}T${expiryTime}:00`
+      const expiryTimestamp = Math.floor(new Date(expiryDateTime).getTime() / 1000)
+
+      const transaction = await createOption(
+        optionType,
+        tradeAction,
+        Number(lots),
+        Number(strikePrice),
+        Number(premium),
+        expiryTimestamp
+      )
+
+      toast({
+        title: "Success!",
+        description: `Transaction hash: ${transaction.hash}`,
+      })
+    } catch (error) {
+      console.error('Error creating option:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getButtonColor = () => {
+    if (tradeAction === 'buy') {
+      return optionType === 'call' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+    } else {
+      return optionType === 'call' ? 'bg-green-800 hover:bg-green-900' : 'bg-red-800 hover:bg-red-900'
+    }
   }
 
   return (
@@ -103,65 +139,137 @@ const TradePage = () => {
 
         {/* Trading Form Section */}
         <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">Trade Options</h2>
-          <Tabs defaultValue="call" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger
-                value="call"
+          <h2 className="text-xl font-bold mb-4">Options Trading</h2>
+          <div className="space-y-4">
+            {/* Call/Put Selection */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <Button
+                className={`w-full ${optionType === 'call' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600'}`}
                 onClick={() => setOptionType('call')}
               >
-                Call
-              </TabsTrigger>
-              <TabsTrigger
-                value="put"
+                CALL
+              </Button>
+              <Button
+                className={`w-full ${optionType === 'put' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600'}`}
                 onClick={() => setOptionType('put')}
               >
-                Put
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="amount">Amount (ETH)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="0.0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="strikePrice">Strike Price (USD)</Label>
-                <Input
-                  id="strikePrice"
-                  type="number"
-                  placeholder="0.0"
-                  value={strikePrice}
-                  onChange={(e) => setStrikePrice(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="expiry">Expiry Date</Label>
-                <Input
-                  id="expiry"
-                  type="date"
-                  value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
-                />
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={handleTrade}
-                variant={optionType === 'call' ? 'default' : 'destructive'}
-              >
-                {optionType === 'call' ? 'Buy Call Option' : 'Buy Put Option'}
+                PUT
               </Button>
             </div>
-          </Tabs>
+
+            {/* Buy/Sell Selection */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <Button
+                className={`w-full ${tradeAction === 'buy' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600'}`}
+                onClick={() => setTradeAction('buy')}
+              >
+                BUY
+              </Button>
+              <Button
+                className={`w-full ${tradeAction === 'sell' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600'}`}
+                onClick={() => setTradeAction('sell')}
+              >
+                SELL
+              </Button>
+            </div>
+
+            <div>
+              <Label htmlFor="lots">Number of Lots</Label>
+              <Input
+                id="lots"
+                type="number"
+                placeholder="Enter number of lots"
+                value={lots}
+                onChange={(e) => setLots(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="strikePrice">Strike Price (USD)</Label>
+              <Input
+                id="strikePrice"
+                type="number"
+                step="0.01"
+                placeholder="Enter strike price"
+                value={strikePrice}
+                onChange={(e) => setStrikePrice(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="premium">Premium (USD)</Label>
+              <Input
+                id="premium"
+                type="number"
+                step="0.01"
+                placeholder="Enter premium price"
+                value={premium}
+                onChange={(e) => setPremium(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="expiryDate">Expiry Date</Label>
+                <Input
+                  id="expiryDate"
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="expiryTime">Expiry Time</Label>
+                <Input
+                  id="expiryTime"
+                  type="time"
+                  value={expiryTime}
+                  onChange={(e) => setExpiryTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <Button
+                className={`w-full text-lg font-bold h-12 ${getButtonColor()}`}
+                onClick={handleTrade}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  "Processing..."
+                ) : (
+                  `${tradeAction.toUpperCase()} ${optionType.toUpperCase()} OPTION`
+                )}
+              </Button>
+            </div>
+
+            {/* Updated Order Summary */}
+            <Card className="p-4 mt-4 bg-gray-900">
+              <h3 className="font-semibold mb-2">Order Summary</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Action:</span>
+                  <span className={tradeAction === 'buy' ? 'text-blue-500' : 'text-orange-500'}>
+                    {tradeAction.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Type:</span>
+                  <span className={optionType === 'call' ? 'text-green-500' : 'text-red-500'}>
+                    {optionType.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total {tradeAction === 'buy' ? 'Cost' : 'Credit'}:</span>
+                  <span>${Number(lots) * Number(premium) || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Expiration:</span>
+                  <span>{expiryDate} {expiryTime}</span>
+                </div>
+              </div>
+            </Card>
+          </div>
         </Card>
       </div>
     </div>
