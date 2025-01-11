@@ -1,37 +1,40 @@
-![Untitled video - Made with Clipchamp (3)](https://github.com/user-attachments/assets/ce3a6299-f673-4bcd-8c27-3ea8f98de1c7)
-# dydx
+# 📈 dydx
 
-## Overview
+## 🌐 Overview
 This project is a **Web3 platform for futures and options trading** with cryptocurrencies as the underlying assets. Built with **Next.js**, the platform leverages **smart contracts** for secure and automated transactions and uses the **Black-Scholes algorithm** to calculate premium rates for options.
 
-## Features
-- **Cryptocurrency Derivatives**: Trade futures and options with crypto as underlying assets.
-- **Smart Contracts**: Fully automated, trustless transactions with reduced counterparty risk.
-- **Black-Scholes Algorithm**: Accurate and real-time calculation of option premiums.
-- **Non-Custodial**: Users retain complete control of their funds.
-- **Global Accessibility**: Seamless access without intermediaries.
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/ce3a6299-f673-4bcd-8c27-3ea8f98de1c7" alt="GIF Preview" />
+</div>
 
-## Advantages
-- Near-instant settlement of trades.
-- Transparent and immutable audit trail.
-- Integration with decentralized oracles for real-time market data.
-- Programmable and customizable derivatives.
-- Cost-efficient operations without intermediaries.
+## 🚀 Features
+- 💱 **Cryptocurrency Derivatives**: Trade futures and options with crypto as underlying assets.
+- 🔒 **Smart Contracts**: Fully automated, trustless transactions with reduced counterparty risk.
+- 📊 **Black-Scholes Algorithm**: Accurate and real-time calculation of option premiums.
+- 🗝️ **Non-Custodial**: Users retain complete control of their funds.
+- 🌍 **Global Accessibility**: Seamless access without intermediaries.
 
-## Technologies Used
+## ✅ Advantages
+- ⚡ Near-instant settlement of trades.
+- 🛡️ Transparent and immutable audit trail.
+- 📡 Integration with decentralized oracles for real-time market data.
+- 🔧 Programmable and customizable derivatives.
+- 💰 Cost-efficient operations without intermediaries.
+
+## 🛠️ Technologies Used
 - **Frontend**: [Next.js](https://nextjs.org/) for server-side rendering and a seamless user experience.
 - **Smart Contracts**: Written in Solidity and deployed on Ethereum (or another EVM-compatible blockchain).
 - **Blockchain Oracles**: Integration with services like [Chainlink](https://chain.link/) for market data.
 - **State Management**: [Redux](https://redux.js.org/) or [Context API](https://reactjs.org/docs/context.html).
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) for rapid UI development.
 
-## Prerequisites
-1. **Node.js**: Install Node.js (>=16.x) from [here](https://nodejs.org/).
-2. **Metamask Wallet**: Browser extension for interacting with blockchain.
-3. **Ethereum Network**: Testnet like Goerli or a local blockchain using tools like [Hardhat](https://hardhat.org/) or [Ganache](https://trufflesuite.com/ganache/).
-4. **Environment Variables**: Set up `.env` file for sensitive configurations.
+## 📋 Prerequisites
+1. 🖥️ **Node.js**: Install Node.js (>=16.x) from [here](https://nodejs.org/).
+2. 🦊 **Metamask Wallet**: Browser extension for interacting with blockchain.
+3. 🔗 **Ethereum Network**: Testnet like Goerli or a local blockchain using tools like [Hardhat](https://hardhat.org/) or [Ganache](https://trufflesuite.com/ganache/).
+4. 🔒 **Environment Variables**: Set up `.env` file for sensitive configurations.
 
-## Setup Instructions
+## ⚙️ Setup Instructions
 
 ### 1. Clone the Repository
 ```bash
