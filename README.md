@@ -1,5 +1,5 @@
-# optilock
-# Web3 Derivatives Trading Platform
+![Untitled video - Made with Clipchamp (3)](https://github.com/user-attachments/assets/ce3a6299-f673-4bcd-8c27-3ea8f98de1c7)
+# dydx
 
 ## Overview
 This project is a **Web3 platform for futures and options trading** with cryptocurrencies as the underlying assets. Built with **Next.js**, the platform leverages **smart contracts** for secure and automated transactions and uses the **Black-Scholes algorithm** to calculate premium rates for options.
