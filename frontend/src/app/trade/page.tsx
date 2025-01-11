@@ -25,7 +25,7 @@ const TradePage = () => {
   const [tradeAction, setTradeAction] = useState<'buy' | 'sell'>('buy')
   const [lots, setLots] = useState('')
   const [strikePrice, setStrikePrice] = useState('')
-  const [premium, setPremium] = useState('')
+  const [premium] = useState('0.0002')
   const [expiryDate, setExpiryDate] = useState('')
   const [expiryTime, setExpiryTime] = useState('')
   const { toast } = useToast()
@@ -246,9 +246,9 @@ const TradePage = () => {
                 id="premium"
                 type="number"
                 step="0.01"
-                placeholder="Enter premium price"
                 value={premium}
-                onChange={(e) => setPremium(e.target.value)}
+                disabled
+                className="bg-gray-100 dark:bg-gray-800"
               />
             </div>
 

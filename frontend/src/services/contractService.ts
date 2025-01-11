@@ -170,7 +170,7 @@ const OptionsTrading = [
     },
   ] as const;
 
-export const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+export const CONTRACT_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
 
 export const getContract = async () => {
     if (!window?.ethereum) throw new Error('Please install MetaMask');
@@ -194,17 +194,21 @@ export const createOption = async (
     
     const contract = await getContract();
     
-    // Calculate total premium if buying
-    const totalPremium = action === 'buy' ? ethers.parseEther((premium * lots).toString()) : 0;
+    // Convert values to Wei
+    const strikePriceWei = ethers.parseEther(strikePrice.toString());
+    const premiumWei = ethers.parseEther(premium.toString());
+    
+    // Calculate total premium in Wei if buying
+    const totalPremiumWei = action === 'buy' ? premiumWei * BigInt(lots) : BigInt(0);
     
     const transaction = await contract.createOption(
         optionType,
         action,
         lots,
-        ethers.parseEther(strikePrice.toString()),
-        ethers.parseEther(premium.toString()),
+        strikePriceWei,
+        premiumWei,
         expiry,
-        { value: totalPremium } // Send ETH if buying
+        { value: totalPremiumWei }
     );
     
     await transaction.wait();

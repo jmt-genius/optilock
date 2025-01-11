@@ -50,8 +50,8 @@ contract OptionsTrading {
         // If buying, require premium payment
         if (keccak256(bytes(_action)) == keccak256(bytes("buy"))) {
             uint256 totalPremium = _premium * _lots;
-            require(msg.value == totalPremium, "Incorrect premium amount");
-            balances[address(this)] += totalPremium;
+            require(msg.value == totalPremium, "Incorrect premium amount sent");
+            balances[address(this)] += msg.value;
         }
 
         uint256 optionId = nextOptionId++;
