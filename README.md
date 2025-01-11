@@ -1,4 +1,6 @@
 # 📈 dydx
+![image](https://github.com/user-attachments/assets/f7a71d47-780b-43d2-8590-c7212f14e957)
+
 
 ## 🌐 Overview
 This project is a **Web3 platform for futures and options trading** with cryptocurrencies as the underlying assets. Built with **Next.js**, the platform leverages **smart contracts** for secure and automated transactions and uses the **Black-Scholes algorithm** to calculate premium rates for options.
