@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast'
 const TradePage = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const [chart, setChart] = useState<IChartApi | null>(null)
+  const [candlestickSeries, setCandlestickSeries] = useState<any>(null)
   const [optionType, setOptionType] = useState<'call' | 'put'>('call')
   const [tradeAction, setTradeAction] = useState<'buy' | 'sell'>('buy')
   const [lots, setLots] = useState('')
@@ -29,7 +30,21 @@ const TradePage = () => {
   const [expiryTime, setExpiryTime] = useState('')
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [lastClosePrice, setLastClosePrice] = useState(1500) // Starting price
+  const [lastTimestamp, setLastTimestamp] = useState(Math.floor(Date.now() / 1000)) // Starting timestamp
 
+  // Function to generate a random candlestick value
+  const generateRandomCandlestick = (lastClose: number, lastTime: number) => {
+    const open = lastClose
+    const high = open + Math.random() * 20
+    const low = open - Math.random() * 20
+    const close = low + Math.random() * (high - low)
+    const time = lastTime + 1 // Increment time by 1 second
+
+    return { time, open, high, low, close }
+  }
+
+  // Initialize chart and candlestick series
   useEffect(() => {
     if (!chartContainerRef.current) return
 
@@ -46,33 +61,59 @@ const TradePage = () => {
       height: 400,
     })
 
-    const candlestickSeries = chartInstance.addCandlestickSeries()
-    
-    // Sample data - replace with your actual data source
-    const data = [
-      { time: '2024-01-01', open: 1500, high: 1550, low: 1480, close: 1520 },
-      { time: '2024-01-02', open: 1520, high: 1580, low: 1510, close: 1560 },
-      // Add more data points...
-    ]
+    const candlestickSeriesInstance = chartInstance.addCandlestickSeries()
+    setCandlestickSeries(candlestickSeriesInstance)
 
-    candlestickSeries.setData(data)
+    // Set initial data for the candlestick series
+    const initialData = [
+      {
+        time: lastTimestamp,
+        open: lastClosePrice,
+        high: lastClosePrice + 10,
+        low: lastClosePrice - 10,
+        close: lastClosePrice,
+      },
+    ]
+    // candlestickSeriesInstance.setData(initialData)
+
     setChart(chartInstance)
 
     const handleResize = () => {
       if (chartContainerRef.current) {
         chartInstance.applyOptions({
-          width: chartContainerRef.current.clientWidth
+          width: chartContainerRef.current.clientWidth,
         })
       }
     }
 
     window.addEventListener('resize', handleResize)
 
+    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize)
       chartInstance.remove()
     }
   }, [])
+
+  // Function to handle refresh button click
+  const handleRefresh = () => {
+    if (!candlestickSeries) return
+
+    const newCandlestick = generateRandomCandlestick(lastClosePrice, lastTimestamp)
+    candlestickSeries.update(newCandlestick)
+    setLastClosePrice(newCandlestick.close) // Update the last close price
+    setLastTimestamp(newCandlestick.time) // Update the last timestamp
+  }
+
+  // Polling effect to refresh the chart every 1 second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleRefresh()
+    }, 1000) // 1000ms = 1 second
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval)
+  }, [candlestickSeries, lastClosePrice, lastTimestamp]) // Dependencies to ensure the latest values are used
 
   const handleTrade = async () => {
     try {
@@ -90,15 +131,15 @@ const TradePage = () => {
       )
 
       toast({
-        title: "Success!",
+        title: 'Success!',
         description: `Transaction hash: ${transaction.hash}`,
       })
     } catch (error) {
       console.error('Error creating option:', error)
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -134,6 +175,9 @@ const TradePage = () => {
               </Select>
             </div>
             <div ref={chartContainerRef} />
+            <Button className="mt-4 w-full" onClick={handleRefresh}>
+              Refresh Chart
+            </Button>
           </Card>
         </div>
 
@@ -236,7 +280,7 @@ const TradePage = () => {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  "Processing..."
+                  'Processing...'
                 ) : (
                   `${tradeAction.toUpperCase()} ${optionType.toUpperCase()} OPTION`
                 )}
