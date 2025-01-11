@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { WalletIcon } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import Logo from '@/components/ui/logo'
+import Image from 'next/image'
 
 export function NavBar() {
   const [account, setAccount] = useState<string | null>(null)
@@ -43,9 +44,8 @@ export function NavBar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center text-xl font-bold">
-              <Logo />
-              OptiLock
+            <Link href="/" className="flex items-center space-x-4 text-xl font-bold">
+                <Image src="/logo.png" alt="dydx" width={100} height={80} />
             </Link>
             <div className="ml-10 flex items-center space-x-4">
               {navLinks.map((link) => (
