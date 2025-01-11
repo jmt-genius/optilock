@@ -1,8 +1,9 @@
-import Gun from 'gun';
+import Gun from 'gun/gun';
 
 // Initialize Gun
 const gun = Gun({
-  peers: ['http://localhost:8765/gun'] // Replace with your Gun peer URL
+  peers: ['http://localhost:3000/gun'], // Replace with your Gun peer URL
+  localStorage: false  // Disable localStorage to avoid AWS dependency
 });
 
 export { gun }; // Export gun instance for subscriptions
@@ -21,6 +22,7 @@ export interface GunOrder {
   trader: string;
   status: 'pending' | 'confirmed';
   timestamp: number;
+  accountAddress: string;
 }
 
 export const saveOrderToGun = async (
@@ -36,6 +38,7 @@ export const saveOrderToGun = async (
     trader: string;
     timestamp: number;
     status: 'pending' | 'confirmed';
+    accountAddress: string;
   }
 ) => {
   try {

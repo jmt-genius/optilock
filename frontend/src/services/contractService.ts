@@ -223,7 +223,8 @@ export const createOption = async (
         transactionHash: transaction.hash,
         trader,
         timestamp: Date.now(),
-        status: 'confirmed'
+        status: 'confirmed',
+        accountAddress: trader
     });
     
     return transaction;

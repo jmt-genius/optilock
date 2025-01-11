@@ -16,6 +16,9 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createOption } from '@/services/contractService'
 import { useToast } from '@/hooks/use-toast'
+import { RefreshCcw } from 'lucide-react'
+import { BrowserProvider } from 'ethers'
+import { CONTRACT_ADDRESS } from '@/constants/constract'
 
 const TradePage = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null)
