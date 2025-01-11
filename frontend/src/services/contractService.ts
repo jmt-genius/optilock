@@ -1,4 +1,6 @@
 import { ethers, BrowserProvider } from 'ethers';
+import { saveOrderToGun, getOrdersFromGun } from './gunService';
+
 const OptionsTrading = [
     {
       anonymous: false,
@@ -168,42 +170,13 @@ const OptionsTrading = [
     },
   ] as const;
 
-const CONTRACT_ADDRESS = '0xe7f1725e7734ce288f8367e1bb143e90bb3f0512';
+export const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
 export const getContract = async () => {
-    if (typeof window.ethereum === 'undefined') {
-        throw new Error('Please install MetaMask');
-    }
-
-    try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        
-        // Check if we're on Hardhat network
-        
-
-        const provider = new BrowserProvider(window.ethereum);
-        
-        const signer = await provider.getSigner();
-        
-        // Log contract details for debugging
-        console.log('Contract ABI:', OptionsTrading);
-        console.log('Contract Address:', CONTRACT_ADDRESS);
-        
-        const contract = new ethers.Contract(
-            CONTRACT_ADDRESS,
-            OptionsTrading,
-            signer
-        );
-        
-        // Log contract methods
-        console.log('Contract methods:', contract.interface.fragments);
-        
-        return contract;
-    } catch (error) {
-        console.error('Error getting contract:', error);
-        throw error;
-    }
+    if (!window?.ethereum) throw new Error('Please install MetaMask');
+    const provider = new BrowserProvider(window.ethereum as any);
+    const signer = await provider.getSigner();
+    return new ethers.Contract(CONTRACT_ADDRESS, OptionsTrading, signer);
 };
 
 export const createOption = async (
@@ -213,24 +186,59 @@ export const createOption = async (
     strikePrice: number,
     premium: number,
     expiry: number
-): Promise<any> => {
-    try {
-        const contract = await getContract();
-        
-        const transaction = await contract.createOption(
-            optionType,               // string: "call" or "put"
-            action,                   // string: "buy" or "sell"
-            lots,                     // uint256: number of lots
-            ethers.parseEther(strikePrice.toString()),  // uint256: strike price in wei
-            ethers.parseEther(premium.toString()),      // uint256: premium in wei
-            expiry,                   // uint256: expiry timestamp
-            { value: ethers.parseEther(premium.toString()) }  // Send premium as value
-        );
-        
-        await transaction.wait();
-        return transaction;
-    } catch (error) {
-        console.error('Error creating option:', error);
-        throw error;
-    }
+) => {
+    if (!window?.ethereum) throw new Error('Please install MetaMask');
+    const provider = new BrowserProvider(window.ethereum as any);
+    const signer = await provider.getSigner();
+    const trader = await signer.getAddress();
+    
+    const contract = await getContract();
+    
+    // Calculate total premium if buying
+    const totalPremium = action === 'buy' ? ethers.parseEther((premium * lots).toString()) : 0;
+    
+    const transaction = await contract.createOption(
+        optionType,
+        action,
+        lots,
+        ethers.parseEther(strikePrice.toString()),
+        ethers.parseEther(premium.toString()),
+        expiry,
+        { value: totalPremium } // Send ETH if buying
+    );
+    
+    await transaction.wait();
+    
+    await saveOrderToGun(CONTRACT_ADDRESS, {
+        optionType,
+        action,
+        lots,
+        strikePrice,
+        premium,
+        expiry,
+        transactionHash: transaction.hash,
+        trader,
+        timestamp: Date.now(),
+        status: 'confirmed'
+    });
+    
+    return transaction;
 };
+
+export const getMyOrders = async () => {
+    if (!window?.ethereum) throw new Error('Please install MetaMask');
+    const provider = new BrowserProvider(window.ethereum as any);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    
+    // Get all order IDs for this address
+    const contract = await getContract();
+    const orderIds = await contract.getOrdersByTrader(address);
+    
+    // Get the details for all orders
+    const orders = await contract.getOrdersDetails(orderIds);
+    
+    return orders;
+};
+
+export { getOrdersFromGun } from './gunService';

@@ -14,8 +14,35 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { createOption } from '@/services/contractService'
+import { createOption, getContract, getMyOrders, CONTRACT_ADDRESS } from '@/services/contractService'
 import { useToast } from '@/hooks/use-toast'
+import { ethers } from 'ethers'
+import { gun, saveOrderToGun, getOrdersFromGun } from '@/services/gunService'
+
+interface Option {
+  trader: string;
+  optionType: string;
+  action: string;
+  lots: number;
+  strikePrice: number;
+  premium: number;
+  expiry: number;
+  isActive: boolean;
+  transactionHash?: string;
+}
+
+interface GunOrder {
+  optionType: string;
+  action: string;
+  lots: number;
+  strikePrice: number;
+  premium: number;
+  expiry: number;
+  transactionHash: string;
+  trader: string;
+  status: 'pending' | 'confirmed';
+  timestamp: number;
+}
 
 const TradePage = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -29,6 +56,8 @@ const TradePage = () => {
   const [expiryTime, setExpiryTime] = useState('')
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [orders, setOrders] = useState<Option[]>([])
+  const [gunOrders, setGunOrders] = useState<GunOrder[]>([])
 
   useEffect(() => {
     if (!chartContainerRef.current) return
@@ -74,12 +103,84 @@ const TradePage = () => {
     }
   }, [])
 
+  useEffect(() => {
+    const fetchOrders = async () => {
+        try {
+            // Fetch blockchain orders
+            const chainOrders = await getMyOrders();
+            
+            // Fetch Gun.js orders
+            const gunOrders = await getOrdersFromGun(CONTRACT_ADDRESS);
+            
+            // Combine and deduplicate orders
+            const allOrders = [...chainOrders];
+            gunOrders.forEach(gunOrder => {
+                if (!chainOrders.find((chainOrder: Option) => 
+                    chainOrder.transactionHash === gunOrder.transactionHash
+                )) {
+                    allOrders.push(gunOrder);
+                }
+            });
+            
+            setOrders(allOrders);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            toast({
+                title: "Error",
+                description: "Failed to fetch orders",
+                variant: "destructive",
+            });
+        }
+    };
+
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    const fetchGunOrders = async () => {
+      try {
+        const orders = await getOrdersFromGun(CONTRACT_ADDRESS);
+        setGunOrders(orders);
+      } catch (error) {
+        console.error('Error fetching Gun orders:', error);
+      }
+    };
+
+    fetchGunOrders();
+    
+    // Set up Gun.js subscription
+    gun.get('orders').map().on((order: any) => {
+      if (order.contractAddress === CONTRACT_ADDRESS) {
+        fetchGunOrders();
+      }
+    });
+
+    return () => {
+      gun.get('orders').map().off();
+    };
+  }, []);
+
   const handleTrade = async () => {
     try {
-      setIsLoading(true)
-      const expiryDateTime = `${expiryDate}T${expiryTime}:00`
-      const expiryTimestamp = Math.floor(new Date(expiryDateTime).getTime() / 1000)
+      setIsLoading(true);
+      const expiryDateTime = `${expiryDate}T${expiryTime}:00`;
+      const expiryTimestamp = Math.floor(new Date(expiryDateTime).getTime() / 1000);
 
+      // Save to Gun.js first
+      await saveOrderToGun(CONTRACT_ADDRESS, {
+        optionType,
+        action: tradeAction,
+        lots: Number(lots),
+        strikePrice: Number(strikePrice),
+        premium: Number(premium),
+        expiry: expiryTimestamp,
+        transactionHash: '', // Empty until blockchain transaction
+        trader: 'pending', // Will be updated after blockchain transaction
+        timestamp: Date.now(),
+        status: 'pending'
+      });
+
+      // Then create blockchain transaction
       const transaction = await createOption(
         optionType,
         tradeAction,
@@ -87,23 +188,23 @@ const TradePage = () => {
         Number(strikePrice),
         Number(premium),
         expiryTimestamp
-      )
+      );
 
       toast({
         title: "Success!",
         description: `Transaction hash: ${transaction.hash}`,
-      })
+      });
     } catch (error) {
-      console.error('Error creating option:', error)
+      console.error('Error creating option:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const getButtonColor = () => {
     if (tradeAction === 'buy') {
@@ -272,6 +373,88 @@ const TradePage = () => {
           </div>
         </Card>
       </div>
+
+      <Card className="p-6">
+        <h2 className="text-xl font-bold mb-4">Active Orders</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="text-left p-2">Type</th>
+                <th className="text-left p-2">Action</th>
+                <th className="text-left p-2">Lots</th>
+                <th className="text-right p-2">Strike Price</th>
+                <th className="text-right p-2">Premium</th>
+                <th className="text-right p-2">Expiry</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order, index) => (
+                <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
+                  <td className={`p-2 ${order.optionType === 'call' ? 'text-green-500' : 'text-red-500'}`}>
+                    {order.optionType.toUpperCase()}
+                  </td>
+                  <td className={`p-2 ${order.action === 'buy' ? 'text-blue-500' : 'text-orange-500'}`}>
+                    {order.action.toUpperCase()}
+                  </td>
+                  <td className="p-2">{order.lots.toString()}</td>
+                  <td className="text-right p-2">
+                    ${Number(ethers.formatEther(order.strikePrice)).toFixed(2)}
+                  </td>
+                  <td className="text-right p-2">
+                    ${Number(ethers.formatEther(order.premium)).toFixed(2)}
+                  </td>
+                  <td className="text-right p-2">
+                    {new Date(Number(order.expiry) * 1000).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="text-xl font-bold mb-4">Pending Orders</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="text-left p-2">Type</th>
+                <th className="text-left p-2">Action</th>
+                <th className="text-left p-2">Lots</th>
+                <th className="text-right p-2">Strike Price</th>
+                <th className="text-right p-2">Premium</th>
+                <th className="text-right p-2">Expiry</th>
+                <th className="text-right p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gunOrders.map((order, index) => (
+                <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
+                  <td className={`p-2 ${order.optionType === 'call' ? 'text-green-500' : 'text-red-500'}`}>
+                    {order.optionType.toUpperCase()}
+                  </td>
+                  <td className={`p-2 ${order.action === 'buy' ? 'text-blue-500' : 'text-orange-500'}`}>
+                    {order.action.toUpperCase()}
+                  </td>
+                  <td className="p-2">{order.lots}</td>
+                  <td className="text-right p-2">${order.strikePrice}</td>
+                  <td className="text-right p-2">${order.premium}</td>
+                  <td className="text-right p-2">
+                    {new Date(order.expiry * 1000).toLocaleString()}
+                  </td>
+                  <td className="text-right p-2">
+                    <span className={order.status === 'pending' ? 'text-yellow-500' : 'text-green-500'}>
+                      {order.status.toUpperCase()}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   )
 }

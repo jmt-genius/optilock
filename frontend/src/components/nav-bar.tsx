@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { WalletIcon } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
+import Logo from '@/components/ui/logo'
 
 export function NavBar() {
   const [account, setAccount] = useState<string | null>(null)
@@ -43,7 +44,8 @@ export function NavBar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold">
+            <Link href="/" className="flex items-center text-xl font-bold">
+              <Logo />
               OptiLock
             </Link>
             <div className="ml-10 flex items-center space-x-4">
@@ -85,10 +87,4 @@ export function NavBar() {
   )
 }
 
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: { method: string }) => Promise<string[]>
-    }
-  }
-}
+

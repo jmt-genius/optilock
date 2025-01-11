@@ -4,8 +4,8 @@ pragma solidity ^0.8.19;
 contract OptionsTrading {
     struct Option {
         address trader;
-        string optionType;    // "call" or "put"
-        string action;        // "buy" or "sell"
+        string optionType;
+        string action;
         uint256 lots;
         uint256 strikePrice;
         uint256 premium;
@@ -15,6 +15,7 @@ contract OptionsTrading {
 
     mapping(uint256 => Option) public options;
     uint256 public nextOptionId;
+    mapping(address => uint256) public balances;
 
     event OptionCreated(
         uint256 indexed optionId,
@@ -25,6 +26,12 @@ contract OptionsTrading {
         uint256 strikePrice,
         uint256 premium,
         uint256 expiry
+    );
+
+    event PremiumPaid(
+        uint256 indexed optionId,
+        address indexed buyer,
+        uint256 amount
     );
 
     function createOption(
@@ -40,8 +47,14 @@ contract OptionsTrading {
         require(_premium > 0, "Premium must be greater than 0");
         require(_expiry > block.timestamp, "Expiry must be in the future");
 
+        // If buying, require premium payment
+        if (keccak256(bytes(_action)) == keccak256(bytes("buy"))) {
+            uint256 totalPremium = _premium * _lots;
+            require(msg.value == totalPremium, "Incorrect premium amount");
+            balances[address(this)] += totalPremium;
+        }
+
         uint256 optionId = nextOptionId++;
-        
         options[optionId] = Option({
             trader: msg.sender,
             optionType: _optionType,
@@ -64,6 +77,42 @@ contract OptionsTrading {
             _expiry
         );
 
+        if (msg.value > 0) {
+            emit PremiumPaid(optionId, msg.sender, msg.value);
+        }
+
         return optionId;
+    }
+
+    function getOrdersByTrader(address trader) external view returns (uint256[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < nextOptionId; i++) {
+            if (options[i].trader == trader) {
+                count++;
+            }
+        }
+
+        uint256[] memory traderOrders = new uint256[](count);
+        uint256 currentIndex = 0;
+        for (uint256 i = 0; i < nextOptionId; i++) {
+            if (options[i].trader == trader) {
+                traderOrders[currentIndex] = i;
+                currentIndex++;
+            }
+        }
+
+        return traderOrders;
+    }
+
+    function getOrdersDetails(uint256[] calldata orderIds) external view returns (Option[] memory) {
+        Option[] memory ordersList = new Option[](orderIds.length);
+        for (uint256 i = 0; i < orderIds.length; i++) {
+            ordersList[i] = options[orderIds[i]];
+        }
+        return ordersList;
+    }
+
+    function getContractBalance() external view returns (uint256) {
+        return balances[address(this)];
     }
 } 
