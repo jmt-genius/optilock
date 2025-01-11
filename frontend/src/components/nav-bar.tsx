@@ -34,8 +34,7 @@ export function NavBar() {
   const navLinks = [
     { name: 'Trade', href: '/trade' },
     { name: 'Portfolio', href: '/portfolio' },
-    { name: 'Markets', href: '/markets' },
-    { name: 'Analytics', href: '/analytics' }
+    { name: 'Metamask', href: '/metamask' },
   ]
 
   return (
